@@ -18,6 +18,7 @@ type connectionManager struct {
 func newConnectionManager(
 	ctx context.Context,
 	uri string,
+	connectionName string,
 	keepAlive bool,
 	retryDelay time.Duration,
 	maxRetry uint,
@@ -26,8 +27,8 @@ func newConnectionManager(
 	logger logger,
 ) *connectionManager {
 	c := &connectionManager{
-		consumerConnection:  newConsumerConnection(ctx, uri, keepAlive, retryDelay, logger),
-		publisherConnection: newPublishingConnection(ctx, uri, keepAlive, retryDelay, maxRetry, publishingCacheSize, publishingCacheTTL, logger),
+		consumerConnection:  newConsumerConnection(ctx, uri, connectionName, keepAlive, retryDelay, logger),
+		publisherConnection: newPublishingConnection(ctx, uri, connectionName, keepAlive, retryDelay, maxRetry, publishingCacheSize, publishingCacheTTL, logger),
 	}
 
 	return c

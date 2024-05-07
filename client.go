@@ -156,6 +156,7 @@ func newClientFromOptions(options *ClientOptions) MQTTClient {
 	client.connectionManager = newConnectionManager(
 		client.ctx,
 		dialURL,
+		options.ConnectionName,
 		options.KeepAlive,
 		options.RetryDelay,
 		options.MaxRetry,

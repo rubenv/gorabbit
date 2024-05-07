@@ -26,6 +26,9 @@ type ClientOptions struct {
 	// UseTLS defines whether we use amqp or amqps protocol.
 	UseTLS bool
 
+	// ConnectionName is the client connection name passed on to the RabbitMQ server.
+	ConnectionName string
+
 	// KeepAlive will determine whether the re-connection and retry mechanisms should be triggered.
 	KeepAlive bool
 
@@ -138,6 +141,13 @@ func (c *ClientOptions) SetVhost(vhost string) *ClientOptions {
 // SetUseTLS will assign the UseTLS status.
 func (c *ClientOptions) SetUseTLS(use bool) *ClientOptions {
 	c.UseTLS = use
+
+	return c
+}
+
+// SetConnectionName will assign the ConnectionName.
+func (c *ClientOptions) SetConnectionName(connectionName string) *ClientOptions {
+	c.ConnectionName = connectionName
 
 	return c
 }

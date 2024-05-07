@@ -30,6 +30,12 @@ const (
 	defaultMode                = Release
 )
 
+// Default values for the amqp Config.
+const (
+	defaultHeartbeat = 10 * time.Second
+	defaultLocale    = "en_US"
+)
+
 const (
 	xDeathCountHeader = "x-death-count"
 )
