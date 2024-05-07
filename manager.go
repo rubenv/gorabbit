@@ -210,11 +210,11 @@ func (manager *mqttManager) CreateQueue(config QueueConfig) error {
 
 	// We declare the queue via the channel.
 	_, err := manager.channel.QueueDeclare(
-		config.Name,      // name
-		config.Durable,   // durable
-		false,            // delete when unused
-		config.Exclusive, // exclusive
-		false,            // no-wait
+		config.Name,       // name
+		config.Durable,    // durable
+		config.AutoDelete, // delete when unused
+		config.Exclusive,  // exclusive
+		false,             // no-wait
 		config.Args,
 	)
 

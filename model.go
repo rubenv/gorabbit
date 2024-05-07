@@ -42,11 +42,12 @@ type ExchangeConfig struct {
 }
 
 type QueueConfig struct {
-	Name      string                 `yaml:"name"`
-	Durable   bool                   `yaml:"durable"`
-	Exclusive bool                   `yaml:"exclusive"`
-	Args      map[string]interface{} `yaml:"args"`
-	Bindings  []BindingConfig        `yaml:"bindings"`
+	Name       string                 `yaml:"name"`
+	Durable    bool                   `yaml:"durable"`
+	Exclusive  bool                   `yaml:"exclusive"`
+	AutoDelete bool                   `yaml:"autoDelete"`
+	Args       map[string]interface{} `yaml:"args"`
+	Bindings   []BindingConfig        `yaml:"bindings"`
 }
 
 type BindingConfig struct {
