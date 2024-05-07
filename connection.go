@@ -150,8 +150,8 @@ func (a *amqpConnection) open() error {
 
 	// We request a connection from the RabbitMQ server.
 	conn, err := amqp.DialConfig(a.uri, amqp.Config{
-		Heartbeat:  10 * time.Second,
-		Locale:     "en_US",
+		Heartbeat:  defaultHeartbeat,
+		Locale:     defaultLocale,
 		Properties: props,
 	})
 	if err != nil {
