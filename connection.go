@@ -19,6 +19,9 @@ type amqpConnection struct {
 	// uri represents the connection string to the RabbitMQ server.
 	uri string
 
+	// connectionName is the client connection name passed on to the RabbitMQ server.
+	connectionName string
+
 	// keepAlive is the flag that will define whether active guards and re-connections are enabled or not.
 	keepAlive bool
 
@@ -50,16 +53,18 @@ type amqpConnection struct {
 // newConsumerConnection initializes a new consumer amqpConnection with given arguments.
 //   - ctx is the parent context.
 //   - uri is the connection string.
+//   - connectionName is the connection name.
 //   - keepAlive will keep the connection alive if true.
 //   - retryDelay defines the delay between each re-connection, if the keepAlive flag is set to true.
 //   - logger is the parent logger.
-func newConsumerConnection(ctx context.Context, uri string, keepAlive bool, retryDelay time.Duration, logger logger) *amqpConnection {
-	return newConnection(ctx, uri, keepAlive, retryDelay, logger, connectionTypeConsumer)
+func newConsumerConnection(ctx context.Context, uri, connectionName string, keepAlive bool, retryDelay time.Duration, logger logger) *amqpConnection {
+	return newConnection(ctx, uri, connectionName, keepAlive, retryDelay, logger, connectionTypeConsumer)
 }
 
 // newPublishingConnection initializes a new publisher amqpConnection with given arguments.
 //   - ctx is the parent context.
 //   - uri is the connection string.
+//   - connectionName is the connection name.
 //   - keepAlive will keep the connection alive if true.
 //   - retryDelay defines the delay between each re-connection, if the keepAlive flag is set to true.
 //   - maxRetry defines the publishing max retry header.
@@ -69,6 +74,7 @@ func newConsumerConnection(ctx context.Context, uri string, keepAlive bool, retr
 func newPublishingConnection(
 	ctx context.Context,
 	uri string,
+	connectionName string,
 	keepAlive bool,
 	retryDelay time.Duration,
 	maxRetry uint,
@@ -76,7 +82,7 @@ func newPublishingConnection(
 	publishingCacheTTL time.Duration,
 	logger logger,
 ) *amqpConnection {
-	conn := newConnection(ctx, uri, keepAlive, retryDelay, logger, connectionTypePublisher)
+	conn := newConnection(ctx, uri, connectionName, keepAlive, retryDelay, logger, connectionTypePublisher)
 
 	conn.maxRetry = maxRetry
 	conn.publishingCacheSize = publishingCacheSize
@@ -88,16 +94,26 @@ func newPublishingConnection(
 // newConnection initializes a new amqpConnection with given arguments.
 //   - ctx is the parent context.
 //   - uri is the connection string.
+//   - connectionName is the connection name.
 //   - keepAlive will keep the connection alive if true.
 //   - retryDelay defines the delay between each re-connection, if the keepAlive flag is set to true.
 //   - logger is the parent logger.
-func newConnection(ctx context.Context, uri string, keepAlive bool, retryDelay time.Duration, logger logger, connectionType connectionType) *amqpConnection {
+func newConnection(
+	ctx context.Context,
+	uri string,
+	connectionName string,
+	keepAlive bool,
+	retryDelay time.Duration,
+	logger logger,
+	connectionType connectionType,
+) *amqpConnection {
 	conn := &amqpConnection{
-		ctx:        ctx,
-		uri:        uri,
-		keepAlive:  keepAlive,
-		retryDelay: retryDelay,
-		channels:   make(amqpChannels, 0),
+		ctx:            ctx,
+		uri:            uri,
+		connectionName: connectionName,
+		keepAlive:      keepAlive,
+		retryDelay:     retryDelay,
+		channels:       make(amqpChannels, 0),
 		logger: inheritLogger(logger, map[string]interface{}{
 			"context": "connection",
 			"type":    connectionType,
@@ -127,8 +143,17 @@ func (a *amqpConnection) open() error {
 
 	a.logger.Debug("Connecting to RabbitMQ server", logField{Key: "uri", Value: a.uriForLog()})
 
+	props := amqp.NewConnectionProperties()
+	if a.connectionName != "" {
+		props.SetClientConnectionName(a.connectionName)
+	}
+
 	// We request a connection from the RabbitMQ server.
-	conn, err := amqp.Dial(a.uri)
+	conn, err := amqp.DialConfig(a.uri, amqp.Config{
+		Heartbeat:  10 * time.Second,
+		Locale:     "en_US",
+		Properties: props,
+	})
 	if err != nil {
 		a.logger.Error(err, "Connection failed")
 
